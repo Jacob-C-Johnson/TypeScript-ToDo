@@ -21,39 +21,113 @@ export default class ListTemplate implements DOMList {
     }
 
     render(fullList: FullList): void {
-        this.clear()
-
+        this.clear();
         fullList.list.forEach(item => {
-            const li = document.createElement("li") as HTMLLIElement
-            li.className = "item"
+            const li = document.createElement('li') as HTMLLIElement;
+            li.className = "item";
+            const check = document.createElement('input') as HTMLInputElement;
+            check.type = "checkbox";
+            check.id = item.id;
+            check.tabIndex = 0;
+            check.checked = item.checked;
 
-            const check = document.createElement("input") as HTMLInputElement
-            check.type = "checkbox"
-            check.id = item.id
-            check.checked = item.checked
-            li.append(check)
+            // Create a text node for responsible person's name
+            const responsibleText = document.createTextNode(item.responsible ? item.responsible : '');
+
+            
+            li.append(check);
 
             check.addEventListener('change', () => {
-                item.checked = !item.checked
-                fullList.save()
+                if (check.checked) {
+                    fullList.removeItem(item.id);
+                } else {
+                    item.checked = !item.checked;
+                    fullList.save();
+                }
             })
 
-            const label = document.createElement("label") as HTMLLabelElement
-            label.htmlFor = item.id
-            label.textContent = item.item
-            li.append(label)
+            const label = document.createElement('label') as HTMLLabelElement;
+            label.htmlFor = item.id;
+            label.textContent = item.item;
+            label.style.marginRight = "10px";
 
-            const button = document.createElement("button") as HTMLButtonElement
-            button.className = 'button'
-            button.textContent = 'X'
-            li.append(button)
+            li.append(label);
+            const responsibleLabel = document.createElement('label') as HTMLLabelElement;
+            responsibleLabel.textContent = "Assigned:";
+            responsibleLabel.style.fontSize = "14px";
+            responsibleLabel.style.marginLeft = "5px";
+            responsibleLabel.style.marginLeft = "5px";
+            responsibleLabel.style.marginRight = "20px";
+            li.append(responsibleLabel);
+            li.append(responsibleText);
 
-            button.addEventListener('click', () => {
-                fullList.removeItem(item.id)
-                this.render(fullList)
+            // code for priority
+            const prioritySelect = document.createElement('select') as HTMLSelectElement;
+            prioritySelect.style.width = '100px'; // set the width of the dropdown
+            prioritySelect.style.height = '45px';
+            prioritySelect.style.marginLeft = "5px"; // set the height of the dropdown
+            const options = ['High', 'Medium', 'Low'];
+            options.forEach(option => {
+                const optElement = document.createElement('option');
+                optElement.value = option;
+                optElement.textContent = option;
+                if (item.priority === option) {
+                    optElement.selected = true;
+                }
+                prioritySelect.append(optElement);
+            });
+
+            prioritySelect.addEventListener('change', () => {
+                item.priority = prioritySelect.value;
+                fullList.save();
+            });
+            const priorityLabel = document.createElement('label') as HTMLLabelElement;
+            priorityLabel.textContent = "Priority:";
+            priorityLabel.style.fontSize = "14px";
+            priorityLabel.style.marginRight = "5px";
+            li.append(priorityLabel);
+            li.append(prioritySelect);
+
+            const editButton = document.createElement('button') as HTMLButtonElement;
+            editButton.className = "edit";
+            editButton.textContent = "Edit";
+            li.append(editButton);
+
+
+
+            editButton.addEventListener('click', () => {
+                const input = document.createElement('input') as HTMLInputElement;
+                input.placeholder = "Name";
+                input.style.width = "100px";
+                const saveButton = document.createElement('button') as HTMLButtonElement;
+                saveButton.textContent = "Save";
+                li.append(input);
+                li.append(saveButton);
+
+                saveButton.addEventListener('click', () => {
+                    item.responsible = input.value;
+                    fullList.save();
+                    input.remove();
+                    saveButton.remove();
+                    responsibleText.textContent = item.responsible;
+                })
             })
 
-            this.ul.append(li)
-        })
+            const removeButton = document.createElement('button') as HTMLButtonElement;
+            removeButton.className = "remove";
+            removeButton.textContent = "X";
+            li.append(removeButton);
+
+            removeButton.addEventListener('click', () => {
+                // Log the id of the item to be removed
+                console.log(`Removing item with id: ${item.id}`);
+                fullList.removeItem(item.id);
+                // After removing the item, log the remaining items
+                console.log(fullList.list);
+                this.render(fullList);
+            })
+
+            this.ul.append(li);
+        });
     }
 }
